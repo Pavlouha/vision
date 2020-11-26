@@ -16,16 +16,18 @@ from torch2trt import torch2trt
 
 images=[]
 
+#parameter trt or not
+trt = False
+
 # create example data
 x = torch.ones((1, 3, 224, 224)).cuda()
 
 #choose images
-img_paths = ['./data/1.jpg', './data/2.jpg', './data/3.jpg', './data/4.jpg', './data/5.jpg', './data/6.jpg']
+img_paths = ['./data/2_big.jpg', './data/banana_0.jpg', './data/brown_bear.jpg', './data/cat_0.jpg', './data/fruit_18.jpg',
+             './data/polar_bear.jpg', './data/strawberry_0.jpg']
 for i in img_paths:
     image = Image.open(i)
     images.append(image)
-
-#print(images)
 
 #Transforms image for model input
 test_transforms = transforms.Compose([transforms.Resize(224),
@@ -35,8 +37,17 @@ test_transforms = transforms.Compose([transforms.Resize(224),
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 #Model loading
+print('Model now loading')
+timest = time.time()
 model = alexnet(pretrained=True).eval().cuda()
-model_trt = torch2trt(model, [x])
+print("elapsed model loading time: {}".format(time.time()-timest))
+
+#torch to tensorRT
+if trt:
+    print("TRT")
+    timest = time.time()
+    model_trt = torch2trt(model, [x])
+    print("torch2trt time: {}".format(time.time()-timest))
 
 #Read classes because our model is pretrained
 classes=[]
@@ -52,8 +63,8 @@ def predict_image(image):
     input = Variable(image_tensor)
     input = input.to(device)
     timest = time.time()
-    output = model_trt(input)
-    #output = model(input)
+    #output = model_trt(input)
+    output = model(input)
     print("processing {}".format(time.time()-timest))
     index = output.data.cpu().numpy().argmax()
     return index
