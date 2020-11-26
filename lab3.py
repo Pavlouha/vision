@@ -19,10 +19,13 @@ images=[]
 # create example data
 x = torch.ones((1, 3, 224, 224)).cuda()
 
-#data_dir = '~/lab3/jetson-inference/data'
-img_path = './data/7.jpg'
-image = Image.open(img_path)
-images.append(image)
+#choose images
+img_paths = ['./data/1.jpg', './data/2.jpg', './data/3.jpg', './data/4.jpg', './data/5.jpg', './data/6.jpg']
+for i in img_paths:
+    image = Image.open(i)
+    images.append(image)
+
+#print(images)
 
 #Transforms image for model input
 test_transforms = transforms.Compose([transforms.Resize(224),
@@ -50,21 +53,22 @@ def predict_image(image):
     input = input.to(device)
     timest = time.time()
     output = model_trt(input)
+    #output = model(input)
     print("processing {}".format(time.time()-timest))
     index = output.data.cpu().numpy().argmax()
     return index
 
 #process our images
 def processing(images):
-    fig=plt.figure(figsize=(10,10))
     
-    for ii in range(len(images)):
-        sub = fig.add_subplot(1, len(images), ii+1)
-        index = predict_image(images[ii])
+    for image in images:
+        fig = plt.figure(figsize=(10, 10))
+        sub = fig.add_subplot(1,1,1)
+        index = predict_image(image)
         sub.set_title("class " + str(classes[index]))
         plt.axis('off')
         plt.imshow(image)
-        plt.savefig(str(index)+'.png')
-        #plt.show()
+        plt.savefig('./output/'+str(index)+'.jpg')
+        plt.show()
 
 processing(images)
